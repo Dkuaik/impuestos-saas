@@ -1,34 +1,22 @@
 services:
-  traefik:
-    image: traefik:latest
-    container_name: traefik
-    restart: unless-stopped
-    ports:
-      - "80:80"     # HTTP
-      - "443:443"   # HTTPS
-    command:
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=enrq.rios.f@gmail.com"
-      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - "traefik_letsencrypt:/letsencrypt"
-
   app:
     build: .
     container_name: impuestos-calculator
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.impuestos.rule=Host(`impuesto-calculator.dkuaik.dev`)"
-      - "traefik.http.routers.impuestos.entrypoints=websecure"
-      - "traefik.http.routers.impuestos.tls.certresolver=myresolver"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.impuestos-http.rule=Host(`impuesto-calculator.dkuaik.dev`)"
+      - "traefik.http.routers.impuestos-http.entrypoints=web"
+      - "traefik.http.routers.impuestos-http.service=impuestos"
+      - "traefik.http.routers.impuestos-https.rule=Host(`impuesto-calculator.dkuaik.dev`)"
+      - "traefik.http.routers.impuestos-https.entrypoints=websecure"
+      - "traefik.http.routers.impuestos-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.impuestos-https.service=impuestos"
       - "traefik.http.services.impuestos.loadbalancer.server.port=80"
+    networks:
+      - proxy
 
-volumes:
-  traefik_letsencrypt:
+networks:
+  proxy:
+    external: true
