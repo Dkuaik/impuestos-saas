@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    container_name: impuestos-calculator
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.impuestos.rule=Host(`impuesto-calculator.dkuaik.dev`)"
+      - "traefik.http.routers.impuestos.entrypoints=websecure"
+      - "traefik.http.routers.impuestos.tls.certresolver=myresolver"
+      - "traefik.http.services.impuestos.loadbalancer.server.port=80"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
